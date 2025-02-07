@@ -1,7 +1,60 @@
 body {
 	max-width: 500px;
 	margin: auto;
+	background: rgb(101,0,170);
+	background: linear-gradient(90deg, rgba(101,0,170,1) 1%, rgba(55,219,209,1) 51%, rgba(216,69,252,1) 99%);
 }
+
+h1 {
+	color: white;
+	text-shadow: 2px 2px 5px #000000;
+}
+
 #timer-display {
 	font-size: 3rem;
+}
+
+#config-form {
+	width: 500px;
+	color: white;
+	text-shadow: 2px 2px 5px #000000;
+	margin: auto;
+	padding: 3%;
+	background-color: rgba(102, 0, 170, 0.368);
+	border-radius: 100%;
+}
+
+#timer-section {
+	width: 500px;
+	height: 500px;
+	margin: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+    align-items: center;
+	background-color: rgba(102, 0, 170, 0.368);
+	border-radius: 100%;
+	text-shadow: 2px 2px 5px #000000;
+	color: white;
+}
+
+.form-control {
+	width: 80px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+}
+
+.btn-primary {
+	background-color: blueviolet;
+	border-color: rgb(79, 0, 153);
+}
+
+.btn-primary:hover {
+	background-color: rgb(161, 68, 248);
+	border-color: rgb(119, 37, 195);
+}
+
+.btn-primary:active {
+	background-color: blueviolet;
+	border-color: rgb(79, 0, 153);
 }

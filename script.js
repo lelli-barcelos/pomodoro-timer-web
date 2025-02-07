@@ -1,103 +1,68 @@
-let timeLeft;
-let timer;
-let isRunning = false;
+let currentCycle = 0;
+let isWorkPeriod = true;
+let timeLeft, timer;
 
-// Função para obter os valores do formulário ou da URL
-function getParams() {
-	let params = new URLSearchParams(window.location.search);
-	return {
-		workTime: params.has("workTime") ? parseInt(params.get("workTime")) * 60 : null,
-		shortBreak: params.has("shortBreak") ? parseInt(params.get("shortBreak")) * 60 : null,
-		longBreak: params.has("longBreak") ? parseInt(params.get("longBreak")) * 60 : null,
-		cycles: params.has("cycles") ? parseInt(params.get("cycles")) : null
-	};
-}
-
-// Função para obter os valores do formulário na página principal
-function getFormValues() {
-	return {
-		workTime: parseInt(document.getElementById("workTime").value) * 60 || 1500,
-		shortBreak: parseInt(document.getElementById("shortBreak").value) * 60 || 300,
-		longBreak: parseInt(document.getElementById("longBreak").value) * 60 || 900,
-		cycles: parseInt(document.getElementById("cycles").value) || 4
-	};
-}
-
-// Inicia o Timer (funciona tanto na página principal quanto no popup)
 function startTimer() {
-	if (isRunning) return; // Evita múltiplos timers rodando
+    // Obtendo os valores do formulário
+    let workTime = parseInt(document.getElementById('workTime').value) * 60;
+    let shortBreak = parseInt(document.getElementById('shortBreak').value) * 60;
+    let longBreak = parseInt(document.getElementById('longBreak').value) * 60;
+    let cycles = parseInt(document.getElementById('cycles').value);
 
-	isRunning = true;
+    document.getElementById("config-form").classList.add("d-none");
+    document.getElementById("timer-section").classList.remove("d-none");
 
-	let params = getParams();
+    currentCycle = 0;
+    isWorkPeriod = true;
+    timeLeft = workTime;
 
-	if (params.workTime !== null) {
-		// Estamos no modo popup (parâmetros na URL)
-		timeLeft = params.workTime;
-	} else {
-		// Estamos na página principal (pegamos valores do formulário)
-		let formValues = getFormValues();
-		timeLeft = formValues.workTime;
-		// Mostra a seção de timer
-		document.getElementById("config-form").classList.add("d-none");
-		document.getElementById("timer-section").classList.remove("d-none");
-	}
-
-	updateDisplay();
-	timer = setInterval(() => {
-		if (timeLeft > 0) {
-			timeLeft--;
-			updateDisplay();
-		} else {
-			clearInterval(timer);
-			isRunning = false;
-			alert("Tempo finalizado!");
-		}
-	}, 1000);
+    updateDisplay();
+    timer = setInterval(() => updateTimer(workTime, shortBreak, longBreak, cycles), 1000);
 }
 
-// Atualiza o Timer na tela
+function updateTimer(workTime, shortBreak, longBreak, cycles) {
+    if (timeLeft > 0) {
+        timeLeft--;
+        updateDisplay();
+    } else {
+        switchPeriods(workTime, shortBreak, longBreak, cycles);
+    }
+}
+
+function switchPeriods(workTime, shortBreak, longBreak, cycles) {
+    if (isWorkPeriod) {
+        currentCycle++;
+        if (currentCycle % cycles === 0) {
+            timeLeft = longBreak;
+            document.getElementById("timer-label").innerText = "Intervalo Longo";
+            document.getElementById("longBreakSound").play();
+        } else {
+            timeLeft = shortBreak;
+            document.getElementById("timer-label").innerText = "Intervalo Curto";
+            document.getElementById("shortBreakSound").play();
+        }
+    } else {
+        if (currentCycle >= cycles) {
+            document.getElementById("finishSound").play();
+            resetTimer();
+            return;
+        }
+        timeLeft = workTime;
+        document.getElementById("timer-label").innerText = "Foco";
+		document.getElementById("finishSound").play();
+    }
+    
+    isWorkPeriod = !isWorkPeriod;
+}
+
 function updateDisplay() {
-	let minutes = Math.floor(timeLeft / 60);
-	let seconds = timeLeft % 60;
-	document.getElementById("timer-display").innerText = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    document.getElementById("timer-display").innerText = `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-// Reseta o Timer
 function resetTimer() {
-	clearInterval(timer);
-	isRunning = false;
-	let formValues = getFormValues();
-	timeLeft = formValues.workTime;
-	updateDisplay();
+    clearInterval(timer);
+    document.getElementById("config-form").classList.remove("d-none");
+    document.getElementById("timer-section").classList.add("d-none");
 }
-
-// Se for um popup, inicia o timer automaticamente ao carregar
-window.onload = function () {
-	if (window.location.search) {
-		startTimer();
-	}
-};
-
-// Abre o popup e passa os valores do formulário
-function openPopup() {
-	let formValues = getFormValues();
-	let url = `popup.html?workTime=${formValues.workTime / 60}&shortBreak=${formValues.shortBreak / 60}&longBreak=${formValues.longBreak / 60}&cycles=${formValues.cycles}`;
-
-	let popup = window.open(url, "PomodoroPopup", "width=400,height=300");
-
-	if (!popup) {
-		alert("O popup foi bloqueado pelo navegador! Permita popups para este site.");
-		return;
-	}
-
-	let checkPopup = setInterval(() => {
-		if (!popup || popup.closed) {
-			clearInterval(checkPopup);
-			alert("O popup foi fechado! Clique no botão novamente para reabrir.");
-		} else {
-			popup.focus();
-		}
-	}, 2000);
-}
-
